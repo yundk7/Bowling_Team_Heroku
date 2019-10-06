@@ -481,7 +481,6 @@ def recentavg():
                     
             #regular team        
             team_list = []
-            numteam = 3
             num = 1
             up = 1
             skip = 0
@@ -492,7 +491,7 @@ def recentavg():
                         num += 1
                     if up == 0:
                         num -= 1
-                    if num == numteam:
+                    if num == int(numteam):
                         up = 0
                         team_list.append(num)
                         skip = 1
