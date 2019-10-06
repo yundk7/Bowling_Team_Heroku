@@ -7,7 +7,7 @@ from flask import (
     redirect)
 import pandas as pd
 import numpy as np
-
+import random
 app = Flask(__name__)
 
 
@@ -17,9 +17,34 @@ from sqlalchemy import create_engine
 @app.route("/")
 def home():
     df = pd.DataFrame()
-    df["Title"] = ["Welcome"]
-    df["Contents"] = ["Gun-Bowl Member Management"]
-    return (df.to_html())
+    df["Title"] = ["Welcome",
+                  "/addmember",
+                  "/members",
+                  "/birthday",
+                  "/passed",
+                  "/inactivate",
+                  "/reactivate",
+                  "/inactive",
+                  "/permanent",
+                  "/addscore",
+                  "/scores",
+                  "/removescore",
+                  "/recentavg"]
+    df["Title"]=df["Title"].apply(lambda x: '<a href="{0}">{0}</a>'.format(x))
+    df["Contents"] = ["Gun-Bowl Member Management",
+                     "adds member:회원추가",
+                     "list of ACTIVE members:활동회원 리스트",
+                     "birthdays by month:회원 달별 생일",
+                     "days passed after entry:가입후 경과 일자",
+                     "inactivate active member: 활동회원 비활성화",
+                     "reactivates inactive member: 비활동회원 활성화",
+                     "list of INACTIVE members: 비활동회원 리스트",
+                     "permanently remove INACTIVE member:비활동회원 영구삭제",
+                     "adds/edits score: 점수 추가/수정",
+                     "list of scores: 점수 데이터",
+                     "remove score: 점수 삭제(이름에 all 입력시 당일 점수 모두 삭제)",
+                     "recent average on N number of games, and team set up: 최근 에버, 정모 팀짜기"]
+    return (df.to_html(escape=False))
 
 @app.route("/formatdb")
 def formatdb():
@@ -54,6 +79,10 @@ def formatdb():
 @app.route("/addmember", methods=["GET", "POST"])
 def addmember():
     if request.method == "POST":
+        password = request.form["password"]
+        if password != "7942":
+            return("wrong password")
+        
         doe = request.form["doe"].replace(" ","")
         namedob = request.form["namedob"].replace(" ","")
         
@@ -160,6 +189,10 @@ def passed():
 def inactivate():
     if request.method == "POST":
 #         con = create_engine("sqlite:///data.sqlite")
+        password = request.form["password"]
+        if password != "7942":
+            return("wrong password")
+        
         con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
         members = pd.read_sql("members",con)
         inactive = pd.read_sql("inactive",con)
@@ -180,6 +213,9 @@ def inactivate():
 @app.route("/reactivate", methods=["GET", "POST"])
 def reactivate():
     if request.method == "POST":
+        password = request.form["password"]
+        if password != "7942":
+            return("wrong password")
 #         con = create_engine("sqlite:///data.sqlite")
         con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
         members = pd.read_sql("members",con)
@@ -200,7 +236,8 @@ def reactivate():
 
 @app.route("/inactive")
 def inactive():
-    con = create_engine("sqlite:///data.sqlite")
+#     con = create_engine("sqlite:///data.sqlite")
+    con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
     inactive = pd.read_sql("inactive",con)
     inactive.index=inactive.index+1
     
@@ -211,6 +248,10 @@ def inactive():
 @app.route("/permanent", methods=["GET", "POST"])
 def permanent():
     if request.method == "POST":
+        password = request.form["password"]
+        if password != "7942":
+            return("wrong password")
+        
         name = request.form["name"].replace(" ","")
 #         con = create_engine("sqlite:///data.sqlite")
         con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
@@ -225,6 +266,10 @@ def permanent():
 @app.route("/addscore", methods=["GET", "POST"])
 def addscore():
     if request.method == "POST":
+        password = request.form["password"]
+        if password != "7942":
+            return("wrong password")
+        
         pd.set_option('display.max_colwidth', -1)
         date = request.form["date"]
         scores = request.form["scores"].replace(" ","")
@@ -301,6 +346,14 @@ def scores():
 @app.route("/removescore", methods=["GET", "POST"])
 def removescore():
     if request.method == "POST":
+        password = request.form["password"]
+        if password != "7942":
+            return("wrong password")
+        
+        password = request.form["password"]
+        if password != "7942":
+            return("wrong password")
+        
         date = request.form["date"]
         names = request.form["names"].lower().replace(" ","")
         
@@ -354,9 +407,115 @@ def recentavg():
         df = pd.DataFrame(df["scores"].str[::-1].str[:int(num)])
         df["scores"] = df.apply(lambda x: [int(i) for i in x["scores"]],axis=1)
         df["games"] = df.apply(lambda x: len(x["scores"]),axis=1)
-        df["avg"] = (df.apply(lambda x: sum(x["scores"]),axis=1)/df["games"]).round(1)
+        df["avg"] = (df.apply(lambda x: sum(x["scores"]),axis=1)/df["games"]).astype(int)#.round(1)
         df["stdev"] = df.apply(lambda x: np.std(x["scores"]),axis=1).round(1)
-        df = df[["avg","stdev","games","scores"]].sort_values("avg",ascending=False)
+        df = df[["avg","stdev","games","scores"]].sort_values("avg",ascending=False).reset_index()
+        df.index = df.index+1
+        
+        
+        numteam = request.form["numteam"].replace(" ","")
+        if numteam.isdigit() == True:
+            members = pd.read_sql("members",con)
+            players = request.form["players"].replace(" ","")
+            if players[-1]==",":
+                players = players[:-1]
+            players = players.split(",")
+#             allow = int(request.form["allow"].replace(" ",""))
+
+            notfound = []
+            for n in players:
+                if n not in list(members["name"]):
+                    notfound.append(n)
+            if len(notfound)>0:
+                return(f'could not find {notfound} in active members')
+            
+            df = df[["name","avg"]]
+            team_df = pd.DataFrame({"name":players})
+            team_df = pd.merge(team_df,df,on="name").sort_values("avg",ascending=False)
+            
+            #random team
+            allow = request.form["allow"].replace(" ","")
+            if allow.isdigit() == True:
+                allow = int(allow)
+                team_list= []
+                num = 1
+                for i in range(0,len(players)):
+                    team_list.append(num)
+                    num += 1
+                    if num > int(numteam):
+                        num = 1
+                for shuffle in range(0,100):
+                    random.shuffle(team_list)
+                
+                go = 0
+                n = 0
+                fail = 0
+                
+                while go ==0:
+                    n+=1
+                    team_df = team_df.sample(frac=1).reset_index(drop = True)
+                    random.shuffle(team_list)
+                    team_df["team"] = team_list
+                #             team_df["pts"] = df["pts"].astype(int)
+
+                    sums = team_df.groupby("team")["avg"].sum()
+                    if (sums.max()-sums.min())<allow:
+                        go = 1
+                    if n == 5000:
+                        go = 1
+                        fail = 1
+                if fail == 1:
+                    return("5,000 tries, and failed")
+                team_df["name"] = team_df["name"].astype(str) + "/" + team_df["avg"].astype(str)
+                team_df.sort_values("avg",ascending=False,inplace=True)
+                team_df.reset_index(drop=True,inplace=True)
+                result = team_df.pivot(values = "name", columns = "team").apply(lambda x: pd.Series(x.dropna().values))
+                result.index += 1
+                tot = team_df.groupby("team").sum().T
+                tot.index = ["total"]
+                result = result.append(tot)
+                return(result.to_html())
+                    
+                    
+                    
+                    
+            #regular team        
+            team_list = []
+            numteam = 3
+            num = 1
+            up = 1
+            skip = 0
+            for i in range(0,len(players)):
+                if skip == 0:
+                    team_list.append(num)
+                    if up == 1:
+                        num += 1
+                    if up == 0:
+                        num -= 1
+                    if num == numteam:
+                        up = 0
+                        team_list.append(num)
+                        skip = 1
+                    if num == 1:
+                        up = 1
+                        team_list.append(num)
+                        skip = 1
+                else:
+                    skip = 0
+            team_list = team_list[:len(players)]
+            
+            team_df["team"] = team_list
+            team_df["name"] = team_df["name"] + "/" + team_df["avg"].astype(str)
+            team_df.reset_index(drop = True, inplace=True)
+            df = team_df.pivot(values="name",columns="team").apply(lambda x: pd.Series(x.dropna().values))
+            df.index+=1
+            
+            tot = team_df.groupby("team").sum().T
+            tot.index = ["total"]
+            
+            df = df.append(tot)
+            return(df.to_html())
+        
         
         return(df.to_html())
     return render_template("recentavg.html")
