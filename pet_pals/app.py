@@ -23,21 +23,23 @@ def home():
 
 @app.route("/formatdb")
 def formatdb():
+    con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
+    
     df = pd.DataFrame({"name":[],"DoB":[],"DoE":[]})
     df = df.astype({"name":"object"})
     df["DoB"]=pd.to_datetime(df["DoB"])
     df["DoE"]=pd.to_datetime(df["DoE"])
-    con = create_engine("sqlite:///data.sqlite")
+#     con = create_engine("sqlite:///data.sqlite")
     df.to_sql("members", con, if_exists="replace",index=False)
     
     df = pd.DataFrame({"name":[],"date":[],"scores":[]})
     df = df.astype({"name":"object","scores":"object"})
     df["date"]=pd.to_datetime(df["date"])
-    con = create_engine("sqlite:///data.sqlite")
+#     con = create_engine("sqlite:///data.sqlite")
     df.to_sql("scores", con, if_exists="replace",index=False)
     
     df = pd.DataFrame()
-    con = create_engine("sqlite:///data.sqlite")
+#     con = create_engine("sqlite:///data.sqlite")
     df.to_sql("attendance", con, if_exists="replace")
     
     df = pd.DataFrame()
@@ -45,7 +47,7 @@ def formatdb():
     df = df.astype({"name":"object"})
     df["DoB"]=pd.to_datetime(df["DoB"])
     df["DoE"]=pd.to_datetime(df["DoE"])
-    con = create_engine("sqlite:///data.sqlite")
+#     con = create_engine("sqlite:///data.sqlite")
     df.to_sql("inactive", con, if_exists="replace",index=False)
     return ("Success")
 
@@ -90,7 +92,8 @@ def addmember():
         df["DoE"] = pd.to_datetime(df["DoE"])
         df.index = df.index+1
         
-        con = create_engine("sqlite:///data.sqlite")
+#         con = create_engine("sqlite:///data.sqlite")
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
         members = pd.read_sql("members",con)
         inactive = pd.read_sql("inactive",con)
         left_df= pd.DataFrame()
@@ -120,7 +123,8 @@ def addmember():
 
 @app.route("/members")
 def members():
-    con = create_engine("sqlite:///data.sqlite")
+#     con = create_engine("sqlite:///data.sqlite")
+    con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
     members = pd.read_sql("members",con)
     members.sort_values("name",inplace = True)
     members.reset_index(drop=True,inplace=True)
@@ -131,7 +135,8 @@ def members():
 
 @app.route("/birthday")
 def birthday():
-    con = create_engine("sqlite:///data.sqlite")
+#     con = create_engine("sqlite:///data.sqlite")
+    con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
     members = pd.read_sql("members",con)
     members["month"] = pd.DatetimeIndex(members['DoB']).month
     df = members.pivot(values="name",columns="month").apply(lambda x: pd.Series(x.dropna().values))
@@ -141,7 +146,8 @@ def birthday():
 
 @app.route("/passed")
 def passed():
-    con = create_engine("sqlite:///data.sqlite")
+#     con = create_engine("sqlite:///data.sqlite")
+    con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
     members = pd.read_sql("members",con)
     today = pd.to_datetime("today")
     members["passed"] = today - members["DoE"]
@@ -153,7 +159,8 @@ def passed():
 @app.route("/inactivate", methods=["GET", "POST"])
 def inactivate():
     if request.method == "POST":
-        con = create_engine("sqlite:///data.sqlite")
+#         con = create_engine("sqlite:///data.sqlite")
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
         members = pd.read_sql("members",con)
         inactive = pd.read_sql("inactive",con)
         name = request.form["name"].replace(" ","")
@@ -173,7 +180,8 @@ def inactivate():
 @app.route("/reactivate", methods=["GET", "POST"])
 def reactivate():
     if request.method == "POST":
-        con = create_engine("sqlite:///data.sqlite")
+#         con = create_engine("sqlite:///data.sqlite")
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
         members = pd.read_sql("members",con)
         inactive = pd.read_sql("inactive",con)
         name = request.form["name"].replace(" ","")
@@ -204,7 +212,8 @@ def inactive():
 def permanent():
     if request.method == "POST":
         name = request.form["name"].replace(" ","")
-        con = create_engine("sqlite:///data.sqlite")
+#         con = create_engine("sqlite:///data.sqlite")
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
         inactive = pd.read_sql("inactive",con)
         scores = pd.read_sql("scores",con)
         scores = scores[~scores["name"].isin([name])]
@@ -252,7 +261,8 @@ def addscore():
             
         df["date"] = pd.to_datetime(df["date"])
         
-        con = create_engine("sqlite:///data.sqlite")
+#         con = create_engine("sqlite:///data.sqlite")
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
         members = pd.read_sql("members",con)
         notfound = []
         for n in df["name"]:
@@ -281,7 +291,8 @@ def addscore():
 @app.route("/scores")
 def scores():
     pd.set_option('display.max_colwidth', -1)
-    con = create_engine("sqlite:///data.sqlite")
+#     con = create_engine("sqlite:///data.sqlite")
+    con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
     scores = pd.read_sql("scores",con)
     scores["date"] = scores["date"].astype(str)
     df = scores.pivot(index="name",columns ="date",values="scores").sort_values("name").sort_index(axis=1,ascending=False)
@@ -293,7 +304,8 @@ def removescore():
         date = request.form["date"]
         names = request.form["names"].lower().replace(" ","")
         
-        con = create_engine("sqlite:///data.sqlite")
+#         con = create_engine("sqlite:///data.sqlite")
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
         scores = pd.read_sql("scores",con)
         
         if names == "all":
@@ -323,7 +335,8 @@ def recentavg():
     if request.method == "POST":
         pd.set_option('display.max_colwidth', -1)
         num = request.form["num"]
-        con = create_engine("sqlite:///data.sqlite")
+#         con = create_engine("sqlite:///data.sqlite")
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
         inactive = pd.read_sql("inactive",con)
         df = pd.read_sql("scores",con)
         df = df[~df["name"].isin(list(inactive["name"]))]
