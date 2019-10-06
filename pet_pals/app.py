@@ -200,7 +200,8 @@ def reactivate():
 
 @app.route("/inactive")
 def inactive():
-    con = create_engine("sqlite:///data.sqlite")
+#     con = create_engine("sqlite:///data.sqlite")
+    con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
     inactive = pd.read_sql("inactive",con)
     inactive.index=inactive.index+1
     
