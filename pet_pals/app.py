@@ -167,7 +167,11 @@ def birthday():
 #     con = create_engine("sqlite:///data.sqlite")
     con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
     members = pd.read_sql("members",con)
+    members["day"] = pd.DatetimeIndex(members["DoB"]).day
+    members["name"] = members["name"] + "/" + members["day"].astype(str)
     members["month"] = pd.DatetimeIndex(members['DoB']).month
+    members.sort_values("day",inplace = True)
+    members.reset_index(drop = True,inplace = True)
     df = members.pivot(values="name",columns="month").apply(lambda x: pd.Series(x.dropna().values))
     
 
@@ -181,7 +185,8 @@ def passed():
     today = pd.to_datetime("today")
     members["passed"] = today - members["DoE"]
     members = members.sort_values("passed",ascending=False)
-    
+    members.reset_index(drop = True, inplace = True)
+    members.index+=1
 
     return (members.to_html())
 
