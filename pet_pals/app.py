@@ -464,9 +464,11 @@ def attendstatus():
             df = df.groupby(["name","year"]).sum()
             df.sort_values("벙",ascending=False,inplace = True)
         df.sort_values("정기전",ascending=False,inplace = True)
-        for i in range(1,32):
-            for n in range(0,7):
-                df[str(i)] = df[str(i)].str.replace(str(n),typ_list[n-1])
+        
+        if month != "":
+            for i in range(1,32):
+                for n in range(0,7):
+                    df[str(i)] = df[str(i)].str.replace(str(n),typ_list[n-1])
         return(df.to_html())
     return render_template("attendstatus.html")
 @app.route("/addscore", methods=["GET", "POST"])
