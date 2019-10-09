@@ -20,12 +20,16 @@ def home():
     df["Title"] = ["Welcome",
                   "/addmember",
                   "/members",
+                   "/editmember",
                   "/birthday",
                   "/passed",
                   "/inactivate",
                   "/reactivate",
                   "/inactive",
                   "/permanent",
+                   "/attendimport",
+                   "/attendcheck",
+                   "/attendstatus",
                   "/addscore",
                   "/scores",
                   "/removescore",
@@ -34,12 +38,16 @@ def home():
     df["Contents"] = ["Gun-Bowl Member Management",
                      "adds member:회원추가",
                      "list of ACTIVE members:활동회원 리스트",
+                      "edit ACTIVE member's DoB & DoE:활동회원 생년월일,가입일 수정",
                      "birthdays by month:회원 달별 생일",
                      "days passed after entry:가입후 경과 일자",
                      "inactivate active member: 활동회원 비활성화",
                      "reactivates inactive member: 비활동회원 활성화",
                      "list of INACTIVE members: 비활동회원 리스트",
                      "permanently remove INACTIVE member:비활동회원 영구삭제",
+                      "imports attendace data in mass: 출석 데이터 엑셀에서 변환",
+                      "attendance check: 출석 체크",
+                      "attendance status: 출석 현황",
                      "adds/edits score: 점수 추가/수정",
                      "list of scores: 점수 데이터",
                      "remove score: 점수 삭제(이름에 all 입력시 당일 점수 모두 삭제)",
@@ -48,32 +56,37 @@ def home():
 
 @app.route("/formatdb")
 def formatdb():
-    con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
+#     con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
     
-    df = pd.DataFrame({"name":[],"DoB":[],"DoE":[]})
-    df = df.astype({"name":"object"})
-    df["DoB"]=pd.to_datetime(df["DoB"])
-    df["DoE"]=pd.to_datetime(df["DoE"])
-#     con = create_engine("sqlite:///data.sqlite")
-    df.to_sql("members", con, if_exists="replace",index=False)
+#     df = pd.DataFrame({"name":[],"DoB":[],"DoE":[]})
+#     df = df.astype({"name":"object"})
+#     df["DoB"]=pd.to_datetime(df["DoB"])
+#     df["DoE"]=pd.to_datetime(df["DoE"])
+# #     con = create_engine("sqlite:///data.sqlite")
+#     df.to_sql("members", con, if_exists="replace",index=False)
     
-    df = pd.DataFrame({"name":[],"date":[],"scores":[]})
-    df = df.astype({"name":"object","scores":"object"})
-    df["date"]=pd.to_datetime(df["date"])
-#     con = create_engine("sqlite:///data.sqlite")
-    df.to_sql("scores", con, if_exists="replace",index=False)
+#     df = pd.DataFrame({"name":[],"date":[],"scores":[]})
+#     df = df.astype({"name":"object","scores":"object"})
+#     df["date"]=pd.to_datetime(df["date"])
+# #     con = create_engine("sqlite:///data.sqlite")
+#     df.to_sql("scores", con, if_exists="replace",index=False)
     
-    df = pd.DataFrame()
-#     con = create_engine("sqlite:///data.sqlite")
-    df.to_sql("attendance", con, if_exists="replace")
+#     days = ["name","year","month"]
+#     for i in range(1,31+1):
+#         days.append(str(i))
+#     df = pd.DataFrame({"days":days})
+#     df = df.T
+#     df.columns = df.iloc[0]
+#     df = df.iloc[1:]
+#     df.to_sql("attendance", con, if_exists="replace",index=False)
     
-    df = pd.DataFrame()
-    df = pd.DataFrame({"name":[],"DoB":[],"DoE":[]})
-    df = df.astype({"name":"object"})
-    df["DoB"]=pd.to_datetime(df["DoB"])
-    df["DoE"]=pd.to_datetime(df["DoE"])
-#     con = create_engine("sqlite:///data.sqlite")
-    df.to_sql("inactive", con, if_exists="replace",index=False)
+#     df = pd.DataFrame()
+#     df = pd.DataFrame({"name":[],"DoB":[],"DoE":[]})
+#     df = df.astype({"name":"object"})
+#     df["DoB"]=pd.to_datetime(df["DoB"])
+#     df["DoE"]=pd.to_datetime(df["DoE"])
+# #     con = create_engine("sqlite:///data.sqlite")
+#     df.to_sql("inactive", con, if_exists="replace",index=False)
     return ("Success")
 
 @app.route("/addmember", methods=["GET", "POST"])
@@ -159,9 +172,36 @@ def members():
     members.reset_index(drop=True,inplace=True)
     members.index=members.index+1
     
-
     return (members.to_html())
 
+@app.route("/editmember", methods=["GET", "POST"])
+def editmember():
+    if request.method == "POST":
+        password = request.form["password"]
+        if password != "7942":
+            return("wrong password")
+        name = request.form["name"]
+        dob = request.form["dob"]
+        if dob != "":
+            dob = pd.to_datetime([dob])
+        
+        doe = request.form["doe"]
+        if doe != "":
+            doe = pd.to_datetime([doe])
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
+        members = pd.read_sql("members",con)
+        
+        if name not in list(members["name"]):
+            return (f"could not find {name} in active members")
+        df = members[members["name"]==name]
+        if dob != "":
+            df["DoB"] = dob
+        if doe != "":
+            df["DoE"] = doe
+        members = pd.concat([members,df]).drop_duplicates(["name"],keep = "last")
+        members.to_sql("members", con, if_exists="replace",index=False)
+        return(df.to_html())
+    return render_template("editmember.html")
 @app.route("/birthday")
 def birthday():
 #     con = create_engine("sqlite:///data.sqlite")
@@ -173,7 +213,7 @@ def birthday():
     members.sort_values("day",inplace = True)
     members.reset_index(drop = True,inplace = True)
     df = members.pivot(values="name",columns="month").apply(lambda x: pd.Series(x.dropna().values))
-    
+    df = df.replace(np.nan, '', regex=True)
 
     return (df.to_html())
 
@@ -268,6 +308,167 @@ def permanent():
         inactive.to_sql("inactive", con, if_exists="replace",index=False)
         return(f"{name} removed permanently")
     return render_template("permanent.html")
+
+@app.route("/attendimport", methods=["GET", "POST"])
+def attendimport():
+    if request.method == "POST":
+        password = request.form["password"]
+        if password != "7942":
+            return("wrong password")
+        
+        date = request.form["date"]
+        data = request.form["data"]
+        date = pd.to_datetime([date])
+        month = str((pd.DatetimeIndex(date).month)[0])
+        year = str((pd.DatetimeIndex(date).year)[0])
+
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
+        attendance = pd.read_sql("attendance", con)
+
+        data  = data.replace(" ","")
+        if data[-1] == ",":
+            data = data[:-1]
+        data = data.split(",")
+
+        typ_list = ["벙","정모","정기전","챔프","교류전","상주","건볼리그"]
+
+        df0 = attendance.iloc[:0]
+        df = pd.DataFrame(df0)
+        day = 1
+        result = pd.DataFrame()
+        for i in range(0,len(data)):
+            if len(data[i]) > 0 and data[i][0].isdigit() == False:
+        #         print(data[i])
+                df["name"] = [data[i]]
+                df["year"] = [year]
+                df["month"] = [month]
+            if len(data[i])==0 or data[i][0].isdigit() == True:
+        #         print(data[i])
+                df[str(day)] = data[i] + ";" if data[i] != "" else data[i]
+                #value_when_true if condition else value_when_false
+                day+=1
+            if i+1 <= len(data)-1 and len(data[i+1]) > 0 and data[i+1][0].isdigit() == False:
+        #     else:
+                result = result.append(df)
+                df = pd.DataFrame(df0)
+                day = 1
+            if i == len(data)-1:
+                result = result.append(df)
+        result = result.fillna("")
+        #save to database here
+
+        attendance = pd.concat([attendance,result]).drop_duplicates(["name","year","month"],keep = "last")
+        attendance.sort_values(["month","year","name"], inplace= True)
+        attendance.to_sql("attendance", con, if_exists = "replace", index = False)
+        # result
+
+        for i in range(1,32):
+            for n in range(0,7):
+                result[str(i)] = result[str(i)].str.replace(str(n+1),typ_list[n])
+        return(result.to_html())
+    
+    return render_template("attendimport.html")
+
+@app.route("/attendcheck", methods=["GET", "POST"])
+def attendcheck():
+    if request.method == "POST":
+        password = request.form["password"]
+        if password != "7942":
+            return("wrong password")
+        date = request.form["date"]
+        typ = request.form["typ"]
+        names = request.form["names"]
+        del_typ = request.form["del_typ"]
+        
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
+        attendance = pd.read_sql("attendance", con)
+        members = pd.read_sql("members", con)
+
+        attendance = pd.DataFrame(attendance)
+        year = pd.DatetimeIndex([date]).year
+        year = str(year[0])
+        month = pd.DatetimeIndex([date]).month
+        month = str(month[0])
+        day = pd.DatetimeIndex([date]).day
+        day = str(day[0])
+        if names[-1] == ",":
+            names = names[:-1]
+        names = names.replace(" ","").split(",")
+        for name in names:
+            if names.count(name) > 1:
+#                 print("no")
+                return(f"{name} was foud multiple times")
+            if name not in list(members["name"]):
+                return(f'{name} not found in active members')
+        df = attendance[attendance["year"]==year][attendance["month"]==month][attendance["name"].isin(names)]
+        df["name"] = names
+        df["year"] = year
+        df["month"] = month
+        df = df.fillna("")
+        if typ != "":
+            typ = typ.replace(" ","").split(",")
+            typ_list = ["벙","정모","정기전","챔프","교류전","리그","건볼리그"]
+            for t in typ:
+                if str(t) not in typ_list:
+#                     print("no")
+                    return(f'{t} was not find in attendance type')
+            for t in typ:
+                i = typ_list.index(t) + 1
+                df[day] = df[day].str.replace(f"{str(i)};","")
+                df[day] = df[day] + str(i) + ";"
+        if del_typ != "":
+            del_typ = del_typ.replace(" ","").split(",")
+            typ_list = ["벙","정모","정기전","챔프","교류전","리그","건볼리그"]
+            for t in del_typ:
+                if str(t) not in typ_list:
+#                     print("no")
+                    return(f'{t} was not find in attendance type')
+            for t in del_typ:
+                i = typ_list.index(t) + 1
+                df[day] = df[day].str.replace(f"{str(i)};","")
+        attendance = pd.concat([attendance,df]).drop_duplicates(["name","year","month"],keep = "last")
+        attendance.sort_values(["month","year","name"], inplace= True)
+        attendance.to_sql("attendance", con, if_exists = "replace", index = False)
+        for i in range(1,32):
+            for n in range(0,7):
+                df[str(i)] = df[str(i)].str.replace(str(n+1),typ_list[n])
+        return(df.to_html())
+    return render_template("attendcheck.html")
+
+
+@app.route("/attendstatus", methods=["GET", "POST"])
+def attendstatus():
+    if request.method == "POST":
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
+        attendance = pd.read_sql("attendance", con)
+        members = pd.read_sql("members",con)
+        year = request.form["year"]
+        month = request.form["month"]
+
+        if month != "" and month[0] == "0":
+            month = month.replace("0","")
+
+        df = attendance[attendance["name"].isin(list(members["name"]))][attendance["year"]==year]
+        if month != "":
+            df = df[df["month"]==month]
+        df["apnd"] = df.iloc[:,3:].sum(axis = 1)
+        # df = df[["name","year","month","apnd"]]
+        typ_list = ["벙","정모","정기전","챔프","교류전","상주","건볼리그"]
+        for typ in typ_list:
+            n = typ_list.index(typ)+1
+            df[typ] = df["apnd"].str.count(str(n))
+        df.drop(columns = ["apnd"], inplace = True)
+        df["Total"] = df.iloc[:,3:].sum(axis=1)
+
+        if month == "":
+            df = df.groupby(["name","year"]).sum()
+            df.sort_values("벙",ascending=False,inplace = True)
+        df.sort_values("정모",ascending=False,inplace = True)
+        for i in range(1,32):
+            for n in range(0,7):
+                df[str(i)] = df[str(i)].str.replace(str(n),typ_list[n-1])
+        return(df.to_html())
+    return render_template("attendstatus.html")
 @app.route("/addscore", methods=["GET", "POST"])
 def addscore():
     if request.method == "POST":
@@ -346,6 +547,7 @@ def scores():
     scores = pd.read_sql("scores",con)
     scores["date"] = scores["date"].astype(str)
     df = scores.pivot(index="name",columns ="date",values="scores").sort_values("name").sort_index(axis=1,ascending=False)
+    df = df.replace(np.nan, '', regex=True)
     return(df.to_html())
 
 @app.route("/removescore", methods=["GET", "POST"])
@@ -479,6 +681,7 @@ def recentavg():
                 tot = team_df.groupby("team").sum().T
                 tot.index = ["total"]
                 result = result.append(tot)
+                result = result.replace(np.nan, '', regex=True)
                 return(result.to_html())
                     
                     
@@ -518,6 +721,7 @@ def recentavg():
             tot.index = ["total"]
             
             df = df.append(tot)
+            df = df.replace(np.nan, '', regex=True)
             return(df.to_html())
         
         
