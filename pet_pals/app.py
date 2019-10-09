@@ -449,7 +449,6 @@ def attendstatus():
             month = month.replace("0","")
         
         df = attendance[attendance["name"].isin(list(members["name"]))][attendance["year"]==year]
-        noatd = 
         if month != "":
             df = df[df["month"]==month]
         df["apnd"] = df.iloc[:,3:].sum(axis = 1)
@@ -470,12 +469,13 @@ def attendstatus():
                 for n in range(0,7):
                     df[str(i)] = df[str(i)].str.replace(str(n),typ_list[n-1])
                     df.sort_values("정기전",ascending=False,inplace = True)
-                    noatd = members[members["name"].isin(list(df["name"]))==False]["name"]
-                    noatd = pd.DataFrame(noatd)
-                    col = df.columns
-                    df = pd.concat([df,noatd])
-                    df = df[col]
-                    df.fillna("",inplace = True)
+            noatd = members[members["name"].isin(list(df["name"]))==False]["name"]
+            noatd = pd.DataFrame(noatd)
+            noatd.sort_values("name",inplace = True)
+            col = df.columns
+            df = pd.concat([df,noatd])
+            df = df[col]
+            df.fillna("",inplace = True)
         return(df.to_html())
     return render_template("attendstatus.html")
 @app.route("/addscore", methods=["GET", "POST"])
