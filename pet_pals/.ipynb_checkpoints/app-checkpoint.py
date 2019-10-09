@@ -463,7 +463,7 @@ def attendstatus():
         if month == "":
             df = df.groupby(["name","year"]).sum()
             df.sort_values("벙",ascending=False,inplace = True)
-        df.sort_values("정모",ascending=False,inplace = True)
+        df.sort_values("정기전",ascending=False,inplace = True)
         for i in range(1,32):
             for n in range(0,7):
                 df[str(i)] = df[str(i)].str.replace(str(n),typ_list[n-1])
