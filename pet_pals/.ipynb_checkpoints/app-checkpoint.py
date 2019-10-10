@@ -462,7 +462,7 @@ def attendstatus():
 
         if month == "":
             df = df.groupby(["name","year"]).sum()
-            df.sort_values("벙",ascending=False,inplace = True)
+            df.sort_values("Total",ascending=False,inplace = True)
             df.reset_index(inplace = True)
         if month != "":
             for i in range(1,32):
