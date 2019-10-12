@@ -16,6 +16,7 @@ from sqlalchemy import create_engine
 # from sqlalchemy import ARRAY, Integer
 @app.route("/")
 def home():
+    pd.set_option('display.max_colwidth', -1)
     df = pd.DataFrame()
     df["Title"] = ["Welcome",
                   "/addmember",
@@ -443,14 +444,14 @@ def attendstatus():
         attendance = pd.read_sql("attendance", con)
         members = pd.read_sql("members",con)
         year = request.form["year"]
-        month = request.form["month"]
+        month = request.form["month"].replace(" ","").split(",")
 
-        if month != "" and month[0] == "0":
-            month = month.replace("0","")
+#         if month != "" and month[0] == "0":
+#             month = month.replace("0","")
         
         df = attendance[attendance["name"].isin(list(members["name"]))][attendance["year"]==year]
-        if month != "":
-            df = df[df["month"]==month]
+        if month[0] != "":
+            df = df[df["month"].isin(month)]
         df["apnd"] = df.iloc[:,3:].sum(axis = 1)
         # df = df[["name","year","month","apnd"]]
         typ_list = ["벙","정모","정기전","챔프","교류전","상주","건볼리그"]
@@ -459,12 +460,17 @@ def attendstatus():
             df[typ] = df["apnd"].str.count(str(n))
         df.drop(columns = ["apnd"], inplace = True)
         df["Total"] = df.iloc[:,3:].sum(axis=1)
-
-        if month == "":
+        
+        if len(month) > 1:
             df = df.groupby(["name","year"]).sum()
             df.sort_values("Total",ascending=False,inplace = True)
             df.reset_index(inplace = True)
-        if month != "":
+        
+        if month[0] == "":
+            df = df.groupby(["name","year"]).sum()
+            df.sort_values("Total",ascending=False,inplace = True)
+            df.reset_index(inplace = True)
+        if month[0] != "" and len(month)==1:
             for i in range(1,32):
                 for n in range(0,7):
                     df[str(i)] = df[str(i)].str.replace(str(n),typ_list[n-1])
