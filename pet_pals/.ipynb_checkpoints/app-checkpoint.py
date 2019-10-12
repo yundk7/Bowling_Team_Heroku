@@ -465,7 +465,16 @@ def attendstatus():
             df = df.groupby(["name","year"]).sum()
             df.sort_values("Total",ascending=False,inplace = True)
             df.reset_index(inplace = True)
-        
+            
+            noatd = members[members["name"].isin(list(df["name"]))==False]["name"]
+            noatd = pd.DataFrame(noatd)
+            noatd.sort_values("name",inplace = True)
+            col = df.columns
+            df = pd.concat([df,noatd])
+            df = df[col]
+            df.fillna("",inplace = True)
+            df.reset_index(drop = True, inplace = True)
+            
         if month[0] == "":
             df = df.groupby(["name","year"]).sum()
             df.sort_values("Total",ascending=False,inplace = True)
