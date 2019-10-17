@@ -809,6 +809,7 @@ def recentavg():
             return df1
         genders = members[["name","gender"]]
         df = df.merge(genders, on = "name")
+        df.index+=1
         df = df.style.hide_columns(["gender"]).apply(highlight, axis=None)
 #         df.drop(columns = ["gender"])
         return(df.render())
