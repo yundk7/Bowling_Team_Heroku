@@ -57,10 +57,10 @@ def home():
 
 @app.route("/formatdb")
 def formatdb():
-#     con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
+    con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
     
-#     df = pd.DataFrame({"name":[],"DoB":[],"DoE":[]})
-#     df = df.astype({"name":"object"})
+#     df = pd.DataFrame({"name":[],"gender":[],"DoB":[],"DoE":[]})
+#     df = df.astype({"name":"object","gender":"int"})
 #     df["DoB"]=pd.to_datetime(df["DoB"])
 #     df["DoE"]=pd.to_datetime(df["DoE"])
 # #     con = create_engine("sqlite:///data.sqlite")
@@ -82,8 +82,8 @@ def formatdb():
 #     df.to_sql("attendance", con, if_exists="replace",index=False)
     
 #     df = pd.DataFrame()
-#     df = pd.DataFrame({"name":[],"DoB":[],"DoE":[]})
-#     df = df.astype({"name":"object"})
+#     df = pd.DataFrame({"name":[],"gender":[],"DoB":[],"DoE":[]})
+#     df = df.astype({"name":"object","gender":"int"})
 #     df["DoB"]=pd.to_datetime(df["DoB"])
 #     df["DoE"]=pd.to_datetime(df["DoE"])
 # #     con = create_engine("sqlite:///data.sqlite")
@@ -98,66 +98,79 @@ def addmember():
             return("wrong password")
         
         doe = request.form["doe"].replace(" ","")
-        namedob = request.form["namedob"].replace(" ","")
+        name = request.form["name"].replace(" ","")
+        gender = request.form["gender"].replace(" ","")
+        dob = request.form["dob"].replace(" ","")
         
-        if namedob[-1] == ",":
-            namedob = namedob[:-1]
+        if doe[-1] == ",":
+            doe = doe[:-1]
+        if name[-1] == ",":
+            name = name[:-1]
+        if gender != "" and gender[-1] == ",":
+            gender = gender[:-1]
+        if dob != "" and dob[-1] == ",":
+            dob = dob[:-1]
             
-        namedob = namedob.replace(" ,",",").replace(", ",",").split(",")
-
+        doe = doe.split(",")
+        name = name.split(",")
+        gender = gender.split(",")
+        dob = dob.split(",")
+        
         names = []
         dobs = []
         does = []
+        genders = []
         names_left = []
         dobs_left = []
         does_left = []
         
-        if doe.lower() == "import":
-            for i in range(0,len(namedob),3):
-                names.append(namedob[i])
-            for i in range(1,len(namedob)+1,3):
-                dobs.append(namedob[i])
-            for i in range(2,len(namedob)+2,3):
-                does.append(namedob[i])
+        if doe[0].lower() == "import":
+            for i in range(0,len(name),4):
+                names.append(name[i])
+            for i in range(1,len(name)+1,4):
+                dobs.append(name[i])
+            for i in range(2,len(name)+2,4):
+                does.append(name[i])
+            for i in range(3,len(name)+3,4):
+                genders.append(name[i])
                 
-        else:   
-            for i in range(0,len(namedob),2):
-                names.append(namedob[i])
-            for i in range(1,len(namedob)+1,2):
-                dobs.append(namedob[i])
-                does.append(doe)
-
-        df = pd.DataFrame()
-        df["name"] = names
-        df["DoB"] = dobs
-        df["DoE"] = does
-        df["DoB"] = pd.to_datetime(df["DoB"])
-        df["DoE"] = pd.to_datetime(df["DoE"])
-        df.index = df.index+1
+        else:
+            names = name
+            dobs = dob
+            does = doe
+            genders = gender
         
+        if doe[0].lower()!= "import" and len(doe)!=len(name):
+            does = []
+            for i in range(0,len(name)):
+                does.append(doe[0])
+        
+                
 #         con = create_engine("sqlite:///data.sqlite")
         con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
         members = pd.read_sql("members",con)
         inactive = pd.read_sql("inactive",con)
-        left_df= pd.DataFrame()
+        left_df= pd.DataFrame()        
         
-        for i in df["name"]:
-            if i in list(members["name"]):
-                left = pd.DataFrame({"name":[i],"DoB":"in MEMBERS already"})
-                left.index = ["FAIL"]
-                left_df = left_df.append(left)
-            if i in list(inactive["name"]):
-                left = pd.DataFrame({"name":[i],"DoB":"in INACTIVE already"})
-                left.index = ["FAIL"]
-                left_df = left_df.append(left)
+        for name in names:
+            if names.count(name) > 1:
+#                 print("no")
+                return(f"{name} was foud multiple times")
+            if name in list(members["name"]):
+                return(f'{name} found in ACTIVE members already')
         
-        if len(left_df)>0:
-            return(left_df.to_html())
         
-        df = df[~df["name"].isin(list(members["name"]))]
+        df = pd.DataFrame()
+        df["name"] = names
+        df["gender"] = genders
+        df["DoB"] = dobs
+        df["DoE"] = does
+        df["DoB"] = pd.to_datetime(df["DoB"])
+        df["DoE"] = pd.to_datetime(df["DoE"])
+#         df.index = df.index+1
         
-        df.to_sql("members", con, if_exists="append",index=False)
-        df = df.append(left_df)
+        members = pd.concat([members,df]).drop_duplicates(["name"],keep = "last")
+        members.to_sql("members", con, if_exists = "replace", index = False)
         return(df.to_html())
 #         return redirect("/", code=302)
 
@@ -182,6 +195,7 @@ def editmember():
         if password != "7942":
             return("wrong password")
         name = request.form["name"]
+        gender = request.form["gender"]
         dob = request.form["dob"]
         if dob != "":
             dob = pd.to_datetime([dob])
@@ -199,6 +213,8 @@ def editmember():
             df["DoB"] = dob
         if doe != "":
             df["DoE"] = doe
+        if gender != "":
+            df["gender"] = gender
         members = pd.concat([members,df]).drop_duplicates(["name"],keep = "last")
         members.to_sql("members", con, if_exists="replace",index=False)
         return(df.to_html())
@@ -631,9 +647,9 @@ def recentavg():
         num = request.form["num"]
 #         con = create_engine("sqlite:///data.sqlite")
         con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
-        inactive = pd.read_sql("inactive",con)
+        members = pd.read_sql("members",con)
         df = pd.read_sql("scores",con)
-        df = df[~df["name"].isin(list(inactive["name"]))]
+        df = df[df["name"].isin(list(members["name"]))]
         
         
         df["date"] = df["date"].astype(str)
@@ -759,7 +775,43 @@ def recentavg():
             return(df.to_html())
         
         
-        return(df.to_html())
+        def highlight(x):
+            c0 = 'border-color: black'
+            c1 = 'background-color: pink'
+            c2 = 'background-color: lightblue'
+            c3 = 'background-color: lightgreen'
+            c4 = 'background-color: yellow'
+            c5 = 'background-color: orange'
+            c6 = 'background-color: red'
+            g1 = 'background-color: lightblue'
+            g2 = 'background-color: pink'
+            #if want set no default colors 
+            #c2 = ''  
+            m1 = x["avg"] > 0
+            m2 = x["avg"] >= 100
+            m3 = x["avg"] >= 140
+            m4 = x["avg"] >= 160
+            m5 = x["avg"] >= 180
+            m6 = x["avg"] >= 200
+            mg1 = x["gender"] == "1"
+            mg2 = x["gender"] == "2"
+
+            df1 = pd.DataFrame(c0,index=x.index, columns=x.columns)
+            
+            df1.loc[m1, 'avg'] = c1
+            df1.loc[m2, 'avg'] = c2
+            df1.loc[m3, 'avg'] = c3
+            df1.loc[m4, 'avg'] = c4
+            df1.loc[m5, 'avg'] = c5
+            df1.loc[m6, 'avg'] = c6
+            df1.loc[mg1, 'name'] = g1
+            df1.loc[mg2, 'name'] = g2
+            return df1
+        genders = members[["name","gender"]]
+        df = df.merge(genders, on = "name")
+        df = df.style.hide_columns(["gender"]).apply(highlight, axis=None)
+#         df.drop(columns = ["gender"])
+        return(df.render())
     return render_template("recentavg.html")
 
 if __name__ == "__main__":

@@ -1,17 +1,28 @@
 <form method="POST" action="/addmember">
     <div class="form-group">
-        <label for="inputStart">Date of Entry(가입일)(YYYY-MM-DD):</label>
-        <input type="text" id="DoE" name="doe">
+        <label for="inputEnd">Date of Entry(가입일):</label>
+        <input type="text" id="doe" name="doe">
+    </div>
+    
+    <div class="form-group">
+        <label for="inputStart">Name(이름):</label>
+        <input type="text" id="name" name="name">
+    </div>
+    
+    <div class="form-group">
+        <label for="inputStart">Gender(성별:1남,2여):</label>
+        <input type="text" id="gender" name="gender">
     </div>
 
     <div class="form-group">
-        <label for="inputEnd">Name and DOB(yyyy-mm-dd)(,separates values)(이름,생년월일(yyyy-mm-dd):,로 구분):</label>
-        <input type="text" id="NameDob" name="namedob">
+        <label for="inputEnd">Date of Birth(생년월일):</label>
+        <input type="text" id="dob" name="dob">
     </div>
 
     <div class="form-group">
         <label for="inputEnd">Password:</label>
         <input type="text" id="password" name="password">
     </div>
+    
     <input type="submit" value="submit">
 </form>
