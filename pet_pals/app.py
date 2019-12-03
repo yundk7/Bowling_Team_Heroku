@@ -8,6 +8,8 @@ from flask import (
 import pandas as pd
 import numpy as np
 import random
+import datetime
+from datetime import timedelta
 app = Flask(__name__)
 
 
@@ -814,6 +816,17 @@ def recentavg():
 #         df.drop(columns = ["gender"])
         return(df.render())
     return render_template("recentavg.html")
+
+@app.route("/regular", methods=["GET", "POST"])
+def regular():
+    if request.method == "POST":
+        name = request.form["name"]
+        password = request.form["password"]
+        scores = request.form["scores"]
+        newpw = request.form["newpw"]
+        
+    
+    return render_template("regular.html")
 
 if __name__ == "__main__":
     app.run()
