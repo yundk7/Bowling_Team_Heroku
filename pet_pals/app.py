@@ -824,7 +824,7 @@ def regular():
         password = request.form["password"]
         scores = request.form["scores"]
         newpw = request.form["newpw"]
-        date = datetime.datetime.now() + datetime.timedelta(hours=4)
+        date = datetime.datetime.now() + datetime.timedelta(hours=5)
 #         date = date.date()
         return(str(date))
     return render_template("regular.html")
