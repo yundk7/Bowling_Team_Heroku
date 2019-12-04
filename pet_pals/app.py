@@ -846,6 +846,12 @@ def regular():
         
         if check != "" and check.isdigit()==False:
             return("점수가 숫자가 아닙니다, the scores inputted were not digits")
+        check = scores.split(",")
+        
+        for c in check:
+            if int(c)>300:
+                return("점수가 300을 초과할 수 없습니다, score cannot be greater than 0")
+            
         if scores != "":
             scores = ","+scores
         newpw = request.form["newpw"]
@@ -899,6 +905,8 @@ def regulardata():
     df["stdev"] = df.apply(lambda x: np.std(x["scores"]),axis=1).round(1)
     df.drop(columns = ["scores"],inplace = True)
     df.reset_index(inplace=True)
+    df.sort_values("name",ascending = True, inplace = True)
+    df.sort_values("games",ascending = False, inplace = True)
     df.set_index(["name","games","avg","stdev"],inplace = True)
     return(df.to_html())
     
