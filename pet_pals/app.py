@@ -855,7 +855,7 @@ def regular():
         if scores != "":
             scores = ","+scores
         newpw = request.form["newpw"]
-        date = datetime.datetime.now() + datetime.timedelta(hours=500)
+        date = datetime.datetime.now() + datetime.timedelta(hours=5)
         date = str(date.date())
         print(date)
         try:
@@ -880,6 +880,7 @@ def regular():
             regular[date]+=[scores]
         regular.to_sql(name, con, if_exists = "replace", index = False)
         regular.drop(columns = ["password"],inplace = True)
+        regular.sort_index(axis = 1, ascending= False, inplace = True)
         return(regular.to_html())
     return render_template("regular.html")
 
