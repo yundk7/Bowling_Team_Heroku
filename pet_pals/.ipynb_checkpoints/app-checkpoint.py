@@ -889,6 +889,16 @@ def regulardata():
         except:
             print(f"{name} not found")
     df.drop(columns = ["password"],inplace = True)
+    df.set_index("name",inplace = True)
+    df.sort_index(axis = 1, ascending=False, inplace = True)
+    df["scores"] = df.sum(axis=1).str[1:]
+    df["scores"] = df["scores"].str.split(",")
+    df["scores"] = df.apply(lambda x: [int(i) for i in x["scores"]],axis=1)
+    df["games"] = df.apply(lambda x: len(x["scores"]),axis=1)
+    df["avg"] = (df.apply(lambda x: sum(x["scores"]),axis=1)/df["games"]).astype(int)
+    df["stdev"] = df.apply(lambda x: np.std(x["scores"]),axis=1).round(1)
+    df.reset_index(inplace=True)
+    df.set_index(["name","games","avg","stdev"],inplace = True)
     return(df.to_html())
     
 if __name__ == "__main__":
