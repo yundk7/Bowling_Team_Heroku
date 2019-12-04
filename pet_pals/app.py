@@ -877,5 +877,19 @@ def regular():
         return(regular.to_html())
     return render_template("regular.html")
 
+@app.route("/regulardata")
+def regulardata():
+    con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
+    members = pd.read_sql("members",con)
+    df = pd.DataFrame()
+    for name in list(members["name"]):
+        try:
+            apnd = pd.read_sql(name,con)
+            df = df.append(apnd)
+        except:
+            print(f"{name} not found")
+    df.drop(columns = ["password"],inplace = True)
+    return(df.to_html())
+    
 if __name__ == "__main__":
     app.run()
