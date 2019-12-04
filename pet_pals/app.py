@@ -901,7 +901,7 @@ def regulardata():
     df.sort_index(axis = 1, ascending=False, inplace = True)
     df["scores"] = df.fillna("").sum(axis=1).str[1:]
     df["scores"] = df["scores"].str.split(",")
-    df["scores"] = df.apply(lambda x: [x["scores"].remove("")],axis=1)
+    df["scores"] = df.apply(lambda x: [while "" in x["scores"]: x["scores"].remove("")],axis=1)
     df["scores"] = df.apply(lambda x: [int(i) for i in x["scores"]],axis=1)
     df["games"] = df.apply(lambda x: len(x["scores"]),axis=1)
     df["avg"] = (df.apply(lambda x: sum(x["scores"]),axis=1)/df["games"]).astype(int)
@@ -915,3 +915,4 @@ def regulardata():
     
 if __name__ == "__main__":
     app.run()
+while thing in some_list: some_list.remove(thing)
