@@ -820,60 +820,22 @@ def recentavg():
         return(df.render())
     return render_template("recentavg.html")
 
-
-@app.route("/importmembers")
-def importmembers():
-    con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
-    members = pd.read_excel("members.xlsx")
-    members.to_sql("members", con, if_exists = "replace", index = False)
-    return("success")
-
 @app.route("/regular", methods=["GET", "POST"])
 def regular():
     if request.method == "POST":
-        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
-        members = pd.read_sql("members",con)
-        
         name = request.form["name"]
-        name = str(name).replace(" ","")
-        if name not in list(members["name"]):
-            return(f'[{name}]을 회원목록에서 찾지 못하였습니다, could not find [{name}] in members list')
         password = request.form["password"]
-        newpw = request.form["newpw"]
         scores = request.form["scores"]
-        scores = str(scores).replace(" ","")
-        check = scores.replace(",","")
-        
-        if check != "" and check.isdigit()==False:
-            return("점수가 숫자가 아닙니다, the scores inputted were not digits")
-        if scores != "":
-            scores = ","+scores
         newpw = request.form["newpw"]
         date = datetime.datetime.now() + datetime.timedelta(hours=5)
-        date = str(date.date())
-        
+        date = date.date()
+        con = create_engine("postgres://qcumacnfmicopw:c700fed529373aa3b54a62168e0914d2a0d1d5b458aa965d4aea319662c6ed97@ec2-174-129-27-158.compute-1.amazonaws.com:5432/d5koeu8hgsrr65")
         try:
             regular = pd.read_sql(name,con)
-            if password != regular["password"][0]:
-                return("wrong password, 암호가 틀렸습니다")
-            elif newpw != "":               
-                regular["password"] = [newpw]
         except:
             regular = pd.DataFrame()
-            regular["name"] = [name]
-            if password != "0000":
-                return("wrong password, 암호가 틀렸습니다")
-            if newpw == "":
-                newpw = "0000"
-            regular["password"] = [newpw]
+            regular["name"] = name
         
-        try:
-            regular[date] += [scores]
-        except:
-            regular[date] = ""
-            regular[date]+=[scores]
-        regular.to_sql(name, con, if_exists = "replace", index = False)
-        regular.drop(columns = ["password"],inplace = True)
         return(regular.to_html())
     return render_template("regular.html")
 
