@@ -892,7 +892,7 @@ def regulardata():
         try:
             apnd = pd.read_sql(name,con)
 #             df = df.append(apnd)
-            df = pd.concat([df,apnd])
+            df = pd.concat([df,apnd],ignore_index=True)
         except:
             print(f"{name} not found")
     df.drop(columns = ["password"],inplace = True)
