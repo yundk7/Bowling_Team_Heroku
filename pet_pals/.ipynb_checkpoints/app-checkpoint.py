@@ -855,9 +855,9 @@ def regular():
         if scores != "":
             scores = ","+scores
         newpw = request.form["newpw"]
-        date = datetime.datetime.now() + datetime.timedelta(hours=5)
+        date = datetime.datetime.now() + datetime.timedelta(hours=500)
         date = str(date.date())
-        
+        print(date)
         try:
             regular = pd.read_sql(name,con)
             if password != regular["password"][0]:
@@ -891,7 +891,8 @@ def regulardata():
     for name in list(members["name"]):
         try:
             apnd = pd.read_sql(name,con)
-            df = df.append(apnd)
+#             df = df.append(apnd)
+            df = pd.concat([df,apnd])
         except:
             print(f"{name} not found")
     df.drop(columns = ["password"],inplace = True)
