@@ -897,6 +897,7 @@ def regulardata():
     df["games"] = df.apply(lambda x: len(x["scores"]),axis=1)
     df["avg"] = (df.apply(lambda x: sum(x["scores"]),axis=1)/df["games"]).astype(int)
     df["stdev"] = df.apply(lambda x: np.std(x["scores"]),axis=1).round(1)
+    df.drop(columns = ["scores"],inplace = True)
     df.reset_index(inplace=True)
     df.set_index(["name","games","avg","stdev"],inplace = True)
     return(df.to_html())
