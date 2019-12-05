@@ -913,6 +913,36 @@ def regulardata():
     df.sort_values("games",ascending = False, inplace = True)
     df.set_index(["name","games","avg","stdev"],inplace = True)
     return(df.to_html())
+
+@app.route('/gunscore')
+def gunscore():
+    return redirect("https://docs.google.com/forms/d/e/1FAIpQLScD-LEgD2Do3-OwK3r3kdxvjrG6XDT6Oa5HkyUYOS9M7Hwufg/viewform", code=302)
+
+@app.route('/table')
+def table():
+    df = pd.read_csv("https://docs.google.com/spreadsheets/d/1k921SCuARlqhDQsMh4F_R0-Eyc5tTCALJKf5k1HDRkc/export?format=csv&gid=201423930")
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    df["Timestamp"] = df.apply(lambda x: (x["Timestamp"]-datetime.timedelta(hours=4)).date(),axis=1)
+    members = pd.read_csv("https://docs.google.com/spreadsheets/d/1A2-4620fVl4PcclTUuhzaroaRo9iKB2iz1lTGSwWBQI/export?format=csv&gid=0")
+    df["c"]= df["이름"].astype(str) + df["암호"].astype(str)
+    members["c"] = members["name"].astype(str) + members["pw"].astype(str)
+    df = df[df["c"].isin(members["c"])].drop(columns = ["c"])
+    df.drop(columns=["암호"],inplace = True)
+    df["점수"] = "," + df["점수"].astype(str)
+    df = df.pivot_table(index="이름",values="점수",columns="Timestamp",aggfunc="sum")
+    df.sort_index(axis=1,ascending=False,inplace = True)
+    df["scores"] = df.fillna("").sum(axis=1).str[1:]
+    df["scores"] = df["scores"].str.split(",")
+    df["scores"] = df.apply(lambda x: [int(i) for i in x["scores"]],axis=1)
+    df["games"] = df.apply(lambda x: len(x["scores"]),axis=1)
+    df["avg"] = (df.apply(lambda x: sum(x["scores"]),axis=1)/df["games"]).astype(int)
+    df["stdev"] = df.apply(lambda x: np.std(x["scores"]),axis=1).round(1)
+    df.drop(columns = ["scores"],inplace = True)
+    df.reset_index(inplace=True)
+    df.sort_values("이름",ascending = True, inplace = True)
+    df.sort_values("games",ascending = False, inplace = True)
+    df.set_index(["이름","games","avg","stdev"],inplace = True)
     
+    return(df.to_html())
 if __name__ == "__main__":
     app.run()
